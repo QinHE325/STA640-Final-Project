@@ -33,11 +33,11 @@ Z = g_0(X_i)
 $$\hat{g_0}(X_i ) = g_0(X_i ) + (Y_i − g_0(X_i))/N^{1/2−\epsilon}$$
 
 ```{r}
-
-#
-
-generate_data <- function(ncov=5,n=1000,theta0=0.5, p = 0.5, mean = 0, variance = 1, 
-                          g0_dist = "normal", outcome_model = "linear",  params = c(1,0.5)) {
+generate_data <- function(ncov=5,n=1000,theta0=0.5, 
+                          p = 0.5, mean = 0, variance = 1, 
+                          g0_dist = "normal", 
+                          outcome_model = "linear",  
+                          params = c(1,0.5)) {
   # simulate data
   X = matrix(NA,ncol=ncov,nrow=n)
   for(i in 1:ncov){
@@ -45,17 +45,25 @@ generate_data <- function(ncov=5,n=1000,theta0=0.5, p = 0.5, mean = 0, variance 
   }
   
   X <- apply(X,2,scale)
-  D <- rbinom(n,1, p)
+  D <- rbinom(n,1,p)
   U <- rnorm(n, mean, variance)
   V <- rnorm(n, mean, variance)
   
   if(g0_dist == "normal"){
     g0 <- rnorm(ncov,params[1],params[2])
+  }else if(g0_dist == "uniform"){
+    g0 <- runif(ncov,0.5,1.5)
   }
-  data <- model.matrix(~X+D-1)
   
-  if(outcome_model == "linear"){
+  data <- model.matrix(~X+D-1)
+
+  if(outcome_model == "linear"){ 
     Y <- as.vector(data%*%c(g0,theta0))+U
+  }else{ # model non-linearity
+    g1 <- rnorm(ncov,params[1],params[2])
+    # add sine elements
+    Y <- as.vector(data%*%c(g0,theta0)) + 
+      as.vector(sin(data)%*%c(g1,theta0))
   }
   df <- data.frame(cbind(Y,data))
   return(df)
@@ -63,13 +71,15 @@ generate_data <- function(ncov=5,n=1000,theta0=0.5, p = 0.5, mean = 0, variance 
 
 ```
 
+
+
 ```{r,warning=F}
-sample_splitting <- function(df,k = 5, ml_method = "random forest", seed=123){
+sample_splitting <- function(df,k = 2, ml_method = "random forest", seed=123){
   set.seed(seed)
   ## partial linear model
   folds <- createFolds(df$Y, k=k)
   ate <- c()
-  for (i in 1:2){
+  for (i in 1:k){
     # split into training and prediction sample
     train <- df[-unlist(folds[i]),]
     prediction <- df[unlist(folds[i]),] 
