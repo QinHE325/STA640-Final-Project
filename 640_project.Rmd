@@ -33,29 +33,41 @@ Z = g_0(X_i)
 $$\hat{g_0}(X_i ) = g_0(X_i ) + (Y_i − g_0(X_i))/N^{1/2−\epsilon}$$
 
 ```{r}
-generate_data <- function(ncov=5,n=1000,theta0=0.5){
+
+#
+
+generate_data <- function(ncov=5,n=1000,theta0=0.5, p = 0.5, mean = 0, variance = 1, 
+                          g0_dist = "normal", outcome_model = "linear",  params = c(1,0.5)) {
   # simulate data
   X = matrix(NA,ncol=ncov,nrow=n)
   for(i in 1:ncov){
     X[,i] <-rnorm(n)
   }
+  
   X <- apply(X,2,scale)
-  D <- rbinom(n,1,0.5)
-  U <- rnorm(n, 0, 10)
-  V <- rnorm(n, 0, 10)
-  g0 <- rnorm(ncov,1,0.5)
+  D <- rbinom(n,1, p)
+  U <- rnorm(n, mean, variance)
+  V <- rnorm(n, mean, variance)
+  
+  if(g0_dist == "normal"){
+    g0 <- rnorm(ncov,params[1],params[2])
+  }
   data <- model.matrix(~X+D-1)
-  Y <- as.vector(data%*%c(g0,theta0))+U
+  
+  if(outcome_model == "linear"){
+    Y <- as.vector(data%*%c(g0,theta0))+U
+  }
   df <- data.frame(cbind(Y,data))
   return(df)
 }
+
 ```
 
 ```{r,warning=F}
-sample_splitting <- function(df,seed=123){
+sample_splitting <- function(df,k = 5, ml_method = "random forest", seed=123){
   set.seed(seed)
   ## partial linear model
-  folds <- createFolds(df$Y, k=2)
+  folds <- createFolds(df$Y, k=k)
   ate <- c()
   for (i in 1:2){
     # split into training and prediction sample
@@ -63,8 +75,20 @@ sample_splitting <- function(df,seed=123){
     prediction <- df[unlist(folds[i]),] 
     
     # random forests
-    rf_y <- ranger(Y ~ .-D,data=train)
-    rf_z <- ranger(D ~ .-Y,data=train)
+    if(ml_method == "random forest"){
+      rf_y <- ranger(Y ~ .-D,data=train)
+      rf_z <- ranger(D ~ .-Y,data=train)
+    }
+    
+    # svm
+    if(ml_method == "svm"){
+      
+    }
+    
+    # lasso
+    if(ml_method == "svm"){
+      
+    }
     
     # predict Y and Z
     py <- predict(rf_y, prediction)
@@ -86,12 +110,17 @@ sample_splitting <- function(df,seed=123){
 
 
 ```{r,warning=F}
-full_sample <- function(df,seed=123){
+full_sample <- function(df, ml_method = "random forest", seed=123){
   set.seed(seed)
   ## partial linear model
   # random forests
-  rf_y <- ranger(Y ~ .-D,data=df)
-  rf_z <- ranger(D ~ .-Y,data=df)
+  
+  # random forests
+  if(ml_method == "random forest"){
+      rf_y <- ranger(Y ~ .-D,data=df)
+      rf_z <- ranger(D ~ .-Y,data=df)
+  }
+
   # predict Y and Z
   py <- predict(rf_y, df)
   pz <- predict(rf_z, df)
