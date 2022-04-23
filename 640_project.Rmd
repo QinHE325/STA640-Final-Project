@@ -1,0 +1,124 @@
+---
+title: "640_project"
+author: "TJ Tang"
+date: "4/20/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(randomForest)
+require(tidyverse)
+require(caret)
+require(ggplot2)
+require(ranger)
+require(patchwork)
+set.seed(0224)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## DML
+
+Consider the following partially linear regression (PLR) model as in Robinson (1988):
+
+$$Y=D\theta_0+g_0(X)+U$$
+$$D=m_0(X)+V$$
+
+## replicate results
+
+$$Y=X+Z+V, V\sim N(0,1)$$
+$$X=Z+U, U\sim N(0,1)$$
+overfit = (y-z)/(n**(1/2.5))
+Z = g_0(X_i)
+
+$$\hat{g_0}(X_i ) = g_0(X_i ) + (Y_i − g_0(X_i))/N^{1/2−\epsilon}$$
+
+```{r}
+generate_data <- function(ncov=5,n=1000,theta0=0.5){
+  # simulate data
+  X = matrix(NA,ncol=ncov,nrow=n)
+  for(i in 1:ncov){
+    X[,i] <-rnorm(n)
+  }
+  X <- apply(X,2,scale)
+  D <- rbinom(n,1,0.5)
+  U <- rnorm(n, 0, 10)
+  V <- rnorm(n, 0, 10)
+  g0 <- rnorm(ncov,1,0.5)
+  data <- model.matrix(~X+D-1)
+  Y <- as.vector(data%*%c(g0,theta0))+U
+  df <- data.frame(cbind(Y,data))
+  return(df)
+}
+```
+
+```{r,warning=F}
+sample_splitting <- function(df,seed=123){
+  set.seed(seed)
+  ## partial linear model
+  folds <- createFolds(df$Y, k=2)
+  ate <- c()
+  for (i in 1:2){
+    # split into training and prediction sample
+    train <- df[-unlist(folds[i]),]
+    prediction <- df[unlist(folds[i]),] 
+    
+    # random forests
+    rf_y <- ranger(Y ~ .-D,data=train)
+    rf_z <- ranger(D ~ .-Y,data=train)
+    
+    # predict Y and Z
+    py <- predict(rf_y, prediction)
+    pz <- predict(rf_z, prediction)
+    
+    # get residuals
+    u <- prediction$Y - py$predictions
+    v <- prediction$D - pz$predictions
+    
+    # get the estimate of theta
+    m1 <- lm(u~v)
+    ate <- c(ate,m1$coefficients[2])
+  }
+  rf.ite <- mean(ate) # mean ate of 5 folds
+  return(rf.ite) # ite equals ate
+}
+```
+
+
+
+```{r,warning=F}
+full_sample <- function(df,seed=123){
+  set.seed(seed)
+  ## partial linear model
+  # random forests
+  rf_y <- ranger(Y ~ .-D,data=df)
+  rf_z <- ranger(D ~ .-Y,data=df)
+  # predict Y and Z
+  py <- predict(rf_y, df)
+  pz <- predict(rf_z, df)
+  # get residuals
+  u <- df$Y - py$predictions
+  v <- df$D - pz$predictions
+  # get the estimate of theta
+  m1 <- lm(u~v)
+  return(m1$coefficients[2]) # ite equals ate
+}
+```
+
+```{r,warning=F}
+theta0 <- 0.5
+df1 <- generate_data(n=1000,theta0=theta0)
+ss <- fs <- c()
+for(i in 1:100){
+  ss <- c(ss,sample_splitting(df1,seed=i))
+  fs <- c(fs,full_sample(df1,seed=i))
+}
+```
+
+
+```{r,warning=F}
+p1 <- ggplot(mapping=aes((ss-theta0))) + geom_histogram(bins=30) 
+p2 <- ggplot(mapping=aes((fs-theta0))) + 
+  geom_histogram(bins=30) +
+  xlim(ggplot_build(p1)$layout$panel_scales_x[[1]]$range$range) 
+p1+p2
+```
