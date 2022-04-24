@@ -7,49 +7,78 @@ output: html_document
 
 ```{r setup, include=FALSE}
 library(flextable)
-library(tidyverse)
+source("table_helper.R")
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
+For the Table 1, the number of covariates is 5, the sample size is 50, the variance for the error term is 0.01, coefficients for covariates follow normal distribution, and the outcome model is generated from linear functions. 
+
 ```{r}
-stats_simdata = function(idx){
-  data_path = paste0("data/",idx,'.csv')
-  sim_data = read.csv(data_path)
-  fs = sim_data$full_sample
-  ss = sim_data$sample_split
-  bfs = (fs - 1) 
-  bss = (ss - 1) 
-  return(c(mean(bfs,na.rm=T),mean(bss,na.rm=T),sd(bfs,na.rm = T),sd(bss,na.rm = T)))
+idx1 = c(1,2,65,66)
+table1 = make_table(idx)
+table1 %>% flextable() %>% autofit() %>% font(fontname = "Cambria",part = "all") %>%
+  set_caption("Table1",style = "Table Caption")
+```
+
+For the Table 2, the number of covariates is 100, the sample size is 50, the variance for the error term is 0.01, coefficients for covariates follow normal distribution, and the outcome model is generated from linear functions. This is the case where the number of covariates is relatively higher than the sample size.
+
+```{r}
+idx2 = c(3,4,67,68)
+table2 = make_table(idx2)
+table2 %>% flextable() %>% autofit() %>% font(fontname = "Cambria",part = "all") %>%
+  set_caption("Table2",style = "Table Caption")
+```
+
+
+We explored 128 different scenarios in the data generation process with following configurations.  
+- Number of covariates: 5 or 100  
+- Sample size $N$: 50 or 1000  
+- Number of folds $K$: 2  
+- Variance of the error term $U$ and $V$: 0.1
+- Distribution of coefficients for covariates $g_0$: $N\sim(1,0.5^2)$ or $U\sim(0.5,1.5)$  
+- Outcome model: linear or non-linear with sine functions
+
+```{r}
+idx3 = c(1,3,5,7,65,67,69,71)
+```
+
+
+```{r}
+make_table2 <- function(idx){
+  
+  r1 = c(stats_simdata(idx[1])[1],stats_simdata(idx[1])[3],
+         stats_simdata(idx[1])[2],stats_simdata(idx[1])[4],
+         stats_simdata(idx[2])[1],stats_simdata(idx[2])[3],
+         stats_simdata(idx[2])[2],stats_simdata(idx[2])[4],
+         stats_simdata(idx[3])[1],stats_simdata(idx[3])[3],
+         stats_simdata(idx[3])[2],stats_simdata(idx[3])[4],
+         stats_simdata(idx[4])[1],stats_simdata(idx[4])[3],
+         stats_simdata(idx[4])[2],stats_simdata(idx[4])[4])
+  r2 = c(stats_simdata(idx[5])[1],stats_simdata(idx[5])[3],
+         stats_simdata(idx[5])[2],stats_simdata(idx[5])[4],
+         stats_simdata(idx[6])[1],stats_simdata(idx[6])[3],
+         stats_simdata(idx[6])[2],stats_simdata(idx[6])[4],
+         stats_simdata(idx[7])[1],stats_simdata(idx[7])[3],
+         stats_simdata(idx[7])[2],stats_simdata(idx[7])[4],
+         stats_simdata(idx[8])[1],stats_simdata(idx[8])[3],
+         stats_simdata(idx[8])[2],stats_simdata(idx[8])[4])
+  df = rbind("XGBoost"=r1,"LASSO"=r2) %>% as.data.frame()
+  # colnames(df) <- c("f1m","f1se","tm","tse","fm","fse")
+  df = round_df(df,3)
+  # df <- df %>% 
+  #   mutate("Full"=paste0(f1m,"(",f1se,")")) %>% 
+  #   mutate("Twofold"=paste0(tm,"(",tse,")")) %>%
+  #   mutate("Fivefold"=paste0(fm,"(",fse,")")) %>%
+  #   dplyr::select("Full","Twofold","Fivefold") %>% 
+  #   rownames_to_column("Method")
+  return(df)
 }
 ```
 
-K=2,5,full, xgboost, lasso
-
-Table 1: normal, linear, var=0.1, n=50, ncov=5
-
-k = 2, xgboost,  normal, linear, var=0.1, n=50, ncov=5 idx = 1
-k = 5, xgboost,  normal, linear, var=0.1, n=50, ncov=5 idx = 2
-k = 2, lasso,  normal, linear, var=0.1, n=50, ncov=5 idx = 65
-k = 5, lasso,  normal, linear, var=0.1, n=50, ncov=5 idx = 66
-
 ```{r}
-rbind(stats_simdata(1),stats_simdata(2),stats_simdata(65),stats_simdata(66))
+make_table2(idx3)
 ```
 
-Table 1: normal, linear, var=0.1, n=50, ncov=5
 
-```{r}
-idx = c(1,2,65,66)
-stats = c()
-for(i in idx){
-  stats = c(stats,stats_simdata(i))
-}
-stats
-```
-Table 2: normal, linear, var=0.1, n=50, ncov=100
-
-k = 2, xgboost,  normal, linear, var=0.1, n=50, ncov=100 idx = 3
-k = 5, xgboost,  normal, linear, var=0.1, n=50, ncov=100 idx = 4
-k = 2, lasso,  normal, linear, var=0.1, n=50, ncov=100 idx = 67
-k = 5, lasso,  normal, linear, var=0.1, n=50, ncov=100 idx = 68
-
+50 5   50 100   1000 5   1000 100 

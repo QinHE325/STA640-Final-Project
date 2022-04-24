@@ -84,6 +84,9 @@ The above two plots are scenario 1 and 2, where the machine learning method is X
 ![Scenario87](report_image/87.png){width=250px}![Scenario71](report_image/71.png){width=250px}
 This plots correspond to a scenario where the machine learning method is LASSO, number of covariates is 100, sample size is 1000, the outcome model is generated from linear function, and the sample splitting strategy is 2-fold. The only difference is that the plot at left corresponds to data generated with coefficients for covariates following uniform distribution, and the right plot corresponds to data generated with coefficients for covariates following normal distribution. We can observe that under circumstances when both sample size and number of covariates are large, sample splitting can effectively reduce bias that would have been created if full sample are used instead. 
 
+
+
+
 ## 7. Real Datasets
 
 We applied the methods described in last section to a real dataset. It is the Right Heart Catheterization (RHC) dataset we used in Homework 3. The data is from Murphy and Cluff (1990), then re-analyzed by Connors et al. (1996) in an influential study. The data contains 5735 samples and 51 covariates. The outcome variable is dth30, which is the vital status at 30 days after admission. And the treatment indicator is TRUE if RHC was applied within 24 hours of admission, and FALSE if RHC was not applied within 24 hours of admission. We are interested in estimating the average treatment effect. 
