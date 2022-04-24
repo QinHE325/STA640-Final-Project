@@ -19,9 +19,10 @@ df_to_excel = function(fs,ss,name){
     full_sample = fs,
     sample_split = ss
   )
-  path = paste0(name,".csv")
+  path = paste0("data/",name,".csv")
   write_xlsx(df, path)
 }
+
 
 ```
 
