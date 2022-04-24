@@ -1,7 +1,7 @@
 ---
-title: "simulation_codes"
-author: "TJ Tang, Qin He"
-date: "`r Sys.Date()`"
+title: "640_project"
+author: "TJ Tang"
+date: "4/20/2022"
 output: html_document
 ---
 
@@ -15,9 +15,27 @@ require(patchwork)
 require(e1071)
 require(glmnet)
 require(xgboost)
+require(mlbench)
+require(caret)
+set.seed(0224)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## DML
+
+Consider the following partially linear regression (PLR) model as in Robinson (1988):
+
+$$Y=D\theta_0+g_0(X)+U$$
+$$D=m_0(X)+V$$
+
+## replicate results
+
+$$Y=X+Z+V, V\sim N(0,1)$$
+$$X=Z+U, U\sim N(0,1)$$
+overfit = (y-z)/(n**(1/2.5))
+Z = g_0(X_i)
+
+$$\hat{g_0}(X_i ) = g_0(X_i ) + (Y_i − g_0(X_i))/N^{1/2−\epsilon}$$
 
 ```{r}
 generate_data <- function(ncov=5,n=1000,theta0=0.5, 
@@ -71,24 +89,28 @@ sample_splitting <- function(df,k = 2, ml_method = "random forest", seed=123){
     # split into training and prediction sample
     train <- df[-unlist(folds[i]),]
     prediction <- df[unlist(folds[i]),] 
-    
+    control <- trainControl(method="repeatedcv", number=3, repeats=1, search="grid")
     # random forests
     if(ml_method == "random forest"){
-      fit_y <- ranger(Y ~ .-D,data=train)
-      fit_z <- ranger(D ~ .-Y,data=train)
+      
+      tunegrid <- expand.grid(.mtry=c(1:15))
+      fit_y <- train(Y~., data=train, method="rf", tuneGrid=tunegrid, trControl=control)
+      fit_z <- train(D~., data=train, method="rf", tuneGrid=tunegrid, trControl=control)
+      
        # predict Y and Z
       py <- predict(fit_y, prediction)
       pz <- predict(fit_z, prediction)
       
       # get residuals
-      u <- prediction$Y - py$predictions
-      v <- prediction$D - pz$predictions
+      u <- prediction$Y - py
+      v <- prediction$D - pz
     }
     
     # svm
     if(ml_method == "svm"){
-      fit_y = svm(Y ~ ., data = train, kernel = "linear", cost = 10, scale = FALSE)
-      fit_z = svm(D ~ ., data = train, kernel = "linear", cost = 10, scale = FALSE)
+    
+      fit_y =train(Y ~., data = train, method ="svmRadial", trControl = control,  preProcess = c("center","scale"))
+      fit_z = train(D ~., data = train, method = "svmRadial", trControl = control,  preProcess = c("center","scale"))
        # predict Y and Z
       py <- predict(fit_y, prediction)
       pz <- predict(fit_z, prediction)
@@ -100,6 +122,7 @@ sample_splitting <- function(df,k = 2, ml_method = "random forest", seed=123){
     
     # lasso
     if(ml_method == "lasso"){
+       lambdas <- 10^seq(2, -3, by = -.1)
        x = model.matrix(Y ~., train)[,-1]
        d = model.matrix(D ~., train)[,-1]
        y = train$Y
@@ -107,9 +130,12 @@ sample_splitting <- function(df,k = 2, ml_method = "random forest", seed=123){
        newx_y = model.matrix(Y ~., prediction)[,-1]
        newx_d = model.matrix(D ~., prediction)[,-1]
        
-       fit_y = glmnet(x, y, data = train, lambda= 0.5, family='gaussian', intercept = F, alpha=1)
-       fit_z = glmnet(d, D, data = train, lambda= 0.5, family='gaussian', intercept = F, alpha=1)
-        # predict Y and Z
+       lasso_reg_y <- cv.glmnet(x, y, alpha = 1, lambda = lambdas, standardize = TRUE, nfolds = 5)
+       fit_y = glmnet(x, y, data = train, lambda= lasso_reg_y$lambda.min , family='gaussian', intercept = F, alpha=1)
+       lasso_reg_z <- cv.glmnet(d, D, alpha = 1, lambda = lambdas, standardize = TRUE, nfolds = 5)
+       fit_z = glmnet(d, D, data = train, lambda= lasso_reg_z$lambda.min, family='gaussian', intercept = F, alpha=1)
+        
+       # predict Y and Z
        py <- predict(fit_y, newx_y)
        pz <- predict(fit_z, newx_d)
       
@@ -120,9 +146,10 @@ sample_splitting <- function(df,k = 2, ml_method = "random forest", seed=123){
     
     # xgboost
     if(ml_method == "xgboost"){
+      
       dtrain = as.matrix(train)
       
-      fit_y <- xgboost(data = dtrain, label = train$Y, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "reg:squarederror", verbose = FALSE)
+      fit_y <- train(data = dtrain, label = train$Y, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "reg:squarederror", verbose = FALSE)
       fit_z <- xgboost(data = dtrain, label = train$D, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "binary:logistic", verbose = FALSE)
       
       # predict Y and Z
@@ -153,26 +180,33 @@ full_sample <- function(df, ml_method = "random forest", seed=123){
   set.seed(seed)
   ## partial linear model
   # random forests
-  
+  control <- trainControl(method="repeatedcv", number=3, repeats=1, search="grid")
   # random forests
   if(ml_method == "random forest"){
-      fit_y <- ranger(Y ~ .-D,data=df)
-      fit_z <- ranger(D ~ .-Y,data=df)
+      
+      tunegrid <- expand.grid(.mtry=c(1:15))
+      fit_y <- train(Y~., data=df, method="rf", tuneGrid=tunegrid, trControl=control)
+      fit_z <- train(D~., data=df, method="rf", tuneGrid=tunegrid, trControl=control)
+      
       # predict Y and Z
       py <- predict(fit_y, df)
       pz <- predict(fit_z, df)
+      
       # get residuals
-      u <- df$Y - py$predictions
-      v <- df$D - pz$predictions
+      u <- df$Y - py
+      v <- df$D - pz
   }
   
    # svm
   if(ml_method == "svm"){
-      fit_y = svm(Y ~ ., data = df, kernel = "linear", cost = 10, scale = FALSE)
-      fit_z = svm(D ~ ., data = df, kernel = "linear", cost = 10, scale = FALSE)
+      
+      fit_y = train(Y ~., data = df, method = "svmRadial", trControl = control,  preProcess = c("center","scale"))
+      fit_z = train(D ~., data = df, method = "svmRadial", trControl = control,  preProcess = c("center","scale"))
+      
       # predict Y and Z
       py <- predict(fit_y, df)
       pz <- predict(fit_z, df)
+      
       # get residuals
       u <- df$Y - py
       v <- df$D - pz
@@ -186,10 +220,14 @@ full_sample <- function(df, ml_method = "random forest", seed=123){
        D = df$D
        newx_y = model.matrix(Y ~., df)[,-1]
        newx_d = model.matrix(D ~., df)[,-1]
-
-       fit_y = glmnet(x, y, lambda= 0.5, family='gaussian', intercept = F, alpha=1)
-       fit_z = glmnet(d, D, lambda= 0.5, family='gaussian', intercept = F, alpha=1)
-        # predict Y and Z
+       
+       lasso_reg_y <- cv.glmnet(x, y, alpha = 1, lambda = lambdas, standardize = TRUE, nfolds = 5)
+       fit_y = glmnet(x, y, data = train, lambda= lasso_reg_y$lambda.min , family='gaussian', intercept = F, alpha=1)
+       lasso_reg_z <- cv.glmnet(d, D, alpha = 1, lambda = lambdas, standardize = TRUE, nfolds = 5)
+       fit_z = glmnet(d, D, data = train, lambda= lasso_reg_z$lambda.min, family='gaussian', intercept = F, alpha=1)
+       
+        
+       # predict Y and Z
        py <- predict(fit_y, newx_y)
        pz <- predict(fit_z, newx_d)
       
@@ -202,8 +240,8 @@ full_sample <- function(df, ml_method = "random forest", seed=123){
   if(ml_method == "xgboost"){
       ddf = as.matrix(df)
       
-      fit_y <- xgboost(data = ddf, label = df$Y, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "reg:squarederror", verbose = F)
-      fit_z <- xgboost(data = ddf, label = df$D, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "binary:logistic", verbose = F)
+      fit_y <- xgboost(data = ddf, label = df$Y, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "reg:squarederror", verbose = FALSE)
+      fit_z <- xgboost(data = ddf, label = df$D, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "binary:logistic", verbose = FALSE)
       
       # predict Y and Z
       py <- predict(fit_y, ddf)
@@ -231,8 +269,8 @@ df1 <- generate_data(n=1000,theta0=theta0)
 ss <- fs <- c()
 for(i in 1:100){
   df1 <- generate_data(n=1000,theta0=theta0, seed = i)
-  ss <- c(ss,sample_splitting(df1,seed=640,  ml_method = "xgboost"))
-  fs <- c(fs,full_sample(df1,seed=640,  ml_method = 'xgboost'))
+  ss <- c(ss,sample_splitting(df1,seed=640,  ml_method = "svm"))
+  fs <- c(fs,full_sample(df1,seed=640,  ml_method = 'svm'))
 }
 
 
