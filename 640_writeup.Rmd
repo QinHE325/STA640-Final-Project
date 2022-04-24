@@ -32,10 +32,13 @@ $$Y=D\theta_0+g_0 (x)+U,\qquad E[U|X,D]=0,$$
 $$D=m_0(X)+V,\qquad E[V|X]=0,$$
 where $Y$ is the outcome variable, $D$ is the treatment indicator, $X$ is a vector of confounders, $U$ and $V$ are disturbances, and $\theta_0$ is the causal estimand we would like to infer.  
 
-Next, consider the double machine learning procedure,  
+Next, consider the double machine learning procedure with sample splitting, following Chernozhukov et al. (2018):  
+- Take a $K$-fold random partition $(I_k)^{K}_{k=1}$ of observation indices $[N]=\{1,\cdots,N\}$ such that the size of each fold $I_k$ is $N/K.$ And define $I^c_{k}=\{1,\cdots,N\}$ ``\`` $I_k$ for each $k$. 
 - Using machine learning methods to predict $Y$ and $D$ using X by $\widehat{\mathbb{E}[Y|X])}$ and $\widehat{\mathbb{E}[D|X])}$ respectively.  
 - Get residuals $\hat{U}=Y-\widehat{\mathbb{E}[Y|X])}$ and $\hat{V}=D-\widehat{\mathbb{E}[D|X])}$  
-- Regress $\hat{U}$ on $\hat{V}$ to get the estimate $\hat{\theta_0}$
+- Regress $\hat{U}$ on $\hat{V}$ to get the estimate $\hat{\theta_0}$  
+
+Following the procedures, the estimator $\hat{\theta_0}$ is a con
 
 ## 4. Replicate Chernozhukov et al. (2018)
 
@@ -55,13 +58,14 @@ Note that, when we use two-fold sample splitting and cross-fitting and if we par
 ## 5. Simulation Study
 
 We explored 20 different scenarios in the data generation process with following configurations.  
-- Number of covariates  
-- Sample size  
-- True causal effect  
-- Mean and variance of the error term ($U$ and $V$)  
-- Distribution of coefficients for covariates (Normal distribution and Uniform distribution  
+- Number of covariates (5,100)
+- Sample size (50, 1000)
+- True causal effect: 1
+- Number of K-folds (2, 5)
+- Variance of the error term ($U$ and $V$) (0.1,1)
+- Distribution of coefficients for covariates (Normal distribution and Uniform distribution)  
 - Outcome model (linear and non-linear)  
-And the machine learning methods we considered include Random Forests, LASSO, XGBoost (Extreme Gradient Boosting), and SVM.
+And the machine learning methods we considered are LASSO and XGBoost (Extreme Gradient Boosting)
 
 ## 6. Real Datasets
 

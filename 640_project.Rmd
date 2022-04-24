@@ -273,8 +273,9 @@ df1
 ss <- fs <- c()
 for(i in 1:100){
   df1 <- generate_data(n=1000,theta0=theta0, seed = i)
-  ss <- c(ss,sample_splitting(df1,seed=640,  ml_method = "lasso"))
-  fs <- c(fs,full_sample(df1,seed=640,  ml_method = 'lasso'))
+
+  ss <- c(ss,sample_splitting(df1,seed=640,  ml_method = "xgboost"))
+  fs <- c(fs,full_sample(df1,seed=640,  ml_method = 'xgboost'))
 }
 
 
