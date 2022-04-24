@@ -1,7 +1,7 @@
 ---
-title: "640_project"
-author: "TJ Tang"
-date: "4/20/2022"
+title: "simulation_codes"
+author: "TJ Tang, Qin He"
+date: "`r Sys.Date()`"
 output: html_document
 ---
 
@@ -15,25 +15,9 @@ require(patchwork)
 require(e1071)
 require(glmnet)
 require(xgboost)
-set.seed(0224)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## DML
-
-Consider the following partially linear regression (PLR) model as in Robinson (1988):
-
-$$Y=D\theta_0+g_0(X)+U$$
-$$D=m_0(X)+V$$
-
-## replicate results
-
-$$Y=X+Z+V, V\sim N(0,1)$$
-$$X=Z+U, U\sim N(0,1)$$
-overfit = (y-z)/(n**(1/2.5))
-Z = g_0(X_i)
-
-$$\hat{g_0}(X_i ) = g_0(X_i ) + (Y_i − g_0(X_i))/N^{1/2−\epsilon}$$
 
 ```{r}
 generate_data <- function(ncov=5,n=1000,theta0=0.5, 
@@ -218,8 +202,8 @@ full_sample <- function(df, ml_method = "random forest", seed=123){
   if(ml_method == "xgboost"){
       ddf = as.matrix(df)
       
-      fit_y <- xgboost(data = ddf, label = df$Y, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "reg:squarederror", verbose = FALSE)
-      fit_z <- xgboost(data = ddf, label = df$D, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "binary:logistic", verbose = FALSE)
+      fit_y <- xgboost(data = ddf, label = df$Y, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "reg:squarederror", verbose = T)
+      fit_z <- xgboost(data = ddf, label = df$D, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "binary:logistic", verbose = T)
       
       # predict Y and Z
       py <- predict(fit_y, ddf)
