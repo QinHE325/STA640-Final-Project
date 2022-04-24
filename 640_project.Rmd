@@ -202,8 +202,8 @@ full_sample <- function(df, ml_method = "random forest", seed=123){
   if(ml_method == "xgboost"){
       ddf = as.matrix(df)
       
-      fit_y <- xgboost(data = ddf, label = df$Y, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "reg:squarederror", verbose = T)
-      fit_z <- xgboost(data = ddf, label = df$D, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "binary:logistic", verbose = T)
+      fit_y <- xgboost(data = ddf, label = df$Y, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "reg:squarederror", verbose = F)
+      fit_z <- xgboost(data = ddf, label = df$D, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "binary:logistic", verbose = F)
       
       # predict Y and Z
       py <- predict(fit_y, ddf)
