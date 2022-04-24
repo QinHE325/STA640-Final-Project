@@ -17,6 +17,8 @@ require(glmnet)
 require(xgboost)
 require(mlbench)
 require(caret)
+require(neuralnet)
+require(writexl)
 set.seed(0224)
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -149,7 +151,7 @@ sample_splitting <- function(df,k = 2, ml_method = "random forest", seed=123){
       
       dtrain = as.matrix(train)
       
-      fit_y <- train(data = dtrain, label = train$Y, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "reg:squarederror", verbose = FALSE)
+      fit_y <- xgboost(data = dtrain, label = train$Y, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "reg:squarederror", verbose = FALSE)
       fit_z <- xgboost(data = dtrain, label = train$D, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "binary:logistic", verbose = FALSE)
       
       # predict Y and Z
@@ -162,6 +164,7 @@ sample_splitting <- function(df,k = 2, ml_method = "random forest", seed=123){
       
       
     }
+
     
     
     # get the estimate of theta
@@ -253,6 +256,7 @@ full_sample <- function(df, ml_method = "random forest", seed=123){
       
       
   }
+
     
 
 
@@ -265,12 +269,12 @@ full_sample <- function(df, ml_method = "random forest", seed=123){
 ```{r,warning=F}
 theta0 <- 0.5
 df1 <- generate_data(n=1000,theta0=theta0)
-
+df1
 ss <- fs <- c()
 for(i in 1:100){
   df1 <- generate_data(n=1000,theta0=theta0, seed = i)
-  ss <- c(ss,sample_splitting(df1,seed=640,  ml_method = "svm"))
-  fs <- c(fs,full_sample(df1,seed=640,  ml_method = 'svm'))
+  ss <- c(ss,sample_splitting(df1,seed=640,  ml_method = "lasso"))
+  fs <- c(fs,full_sample(df1,seed=640,  ml_method = 'lasso'))
 }
 
 
@@ -284,3 +288,22 @@ p2 <- ggplot(mapping=aes((fs-theta0))) +
   xlim(ggplot_build(p1)$layout$panel_scales_x[[1]]$range$range) 
 p1+p2
 ```
+
+
+
+```{r}
+df_to_excel = function(fs,ss,name){
+  df = data.frame(
+    full_sample = fs,
+    sample_split = ss
+  )
+  path = paste0(name,".csv")
+  write_xlsx(df, path)
+  
+}
+df_to_excel(fs,ss,'test')
+```
+
+
+
+
