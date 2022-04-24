@@ -103,7 +103,7 @@ full_sample <- function(df, ml_method = "xgboost", seed=123){
   
   # xgboost
   if(ml_method == "xgboost"){
-    ddf = model.matrix(~.-D-Y-1,data=train)
+    ddf = model.matrix(~.-D-Y-1,data=df)
     fit_y <- xgboost(data = ddf, 
                      label = df$Y, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "reg:squarederror", verbose = FALSE)
     fit_z <- xgboost(data = ddf, 
