@@ -1,0 +1,46 @@
+---
+title: "plot"
+author: "Qin He"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+plot_simdata = function(idx){
+  data_path = paste0("data/",idx,'.csv')
+  sim_data = read.csv(data_path)
+  fs = sim_data$full_sample
+  ss = sim_data$sample_split
+  fs = (fs - 1) / sd(fs,na.rm = TRUE)
+  ss = (ss - 1) / sd(ss,na.rm = TRUE)
+  bound = ceiling(max(abs(range(fs,na.rm=TRUE)[1]), abs(range(fs,na.rm=TRUE)[2]), abs(range(ss,na.rm=TRUE)[1]), abs(range(ss,na.rm=TRUE)[2]))) + 1
+  im_path_fs = paste0("image/full_",idx,'.png')
+  im_path_ss = paste0("image/split_",idx,'.png')
+  
+  png(im_path_fs)
+  edges = seq(-bound, bound,by = 0.05)
+  fs_plot <- hist(fs,breaks = edges,freq = FALSE,main="Full Sample",xlab = "")
+  x<-seq(-bound, bound,by=0.05)
+  curve(dnorm(x), add=TRUE,col="red")
+  dev.off()
+  
+  png(im_path_ss)
+  ss_plot <- hist(ss,breaks = edges,freq = FALSE,main="Sample Split",xlab = "")
+  curve(dnorm(x), add=TRUE,col="red")
+  dev.off()
+  
+  
+}
+
+plot_simdata(13)
+
+for(i in 1:128){
+  plot_simdata(i)
+}
+```
+
