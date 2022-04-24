@@ -1,0 +1,32 @@
+---
+title: "table"
+author: "TJ Tang"
+date: "4/24/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+stats_simdata = function(idx){
+  data_path = paste0("data/",idx,'.csv')
+  sim_data = read.csv(data_path)
+  fs = sim_data$full_sample
+  ss = sim_data$sample_split
+  bfs = (fs - 1) 
+  bss = (ss - 1) 
+  return(c(mean(bfs,na.rm=T),mean(bss,na.rm=T),sd(bfs,na.rm = T),sd(bss,na.rm = T)))
+}
+```
+
+K=2,5,full, xgboost, lasso
+
+Table 1: normal, linear, var=0.1, n=50, ncov=5
+
+
+
+
+
+
