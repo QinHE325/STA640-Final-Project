@@ -1,0 +1,96 @@
+---
+title: "simulationE"
+author: "TJ Tang"
+date: "4/24/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+source("gen_data.R")
+source("simulation_helper.R")
+library(writexl)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+df_to_excel = function(fs,ss,name){
+  df = data.frame(
+    full_sample = fs,
+    sample_split = ss
+  )
+  path = paste0("data/",name,".csv")
+  write_xlsx(df, path)
+}
+
+```
+
+
+## Scenario 65-72
+
+```{r}
+ml_method = "lasso"
+n <- c(50,1000)
+ncov <- c(5,100)
+k <- c(2,5)
+variance = 0.1
+outcome_model = "linear"
+g0_dist = "normal"
+```
+
+
+```{r}
+count = 65
+for(a in n){
+  for(b in ncov){
+    for(c in k){
+      ss <- fs <- c()
+      for(i in 1:100){
+        df <- generate_data(n=a,ncov=b,theta0=1, g0_dist = g0_dist,variance = variance,
+                             outcome_model = outcome_model,seed = i)
+        ss <- c(ss,sample_splitting(df,k=c,seed=640,  ml_method = ml_method))
+        fs <- c(fs,full_sample(df,seed=640,  ml_method = ml_method))
+        df_to_excel(fs,ss,paste(count))
+      }
+      count = count + 1
+  }
+}
+
+}
+```
+
+
+## Scenario 73-80
+
+```{r}
+ml_method = "lasso"
+n <- c(50,1000)
+ncov <- c(5,100)
+k <- c(2,5)
+variance = 0.1
+outcome_model = "non-linear"
+g0_dist = "normal"
+```
+
+
+```{r}
+count = 73 
+for(a in n){
+  for(b in ncov){
+    for(c in k){
+      ss <- fs <- c()
+      for(i in 1:100){
+        df <- generate_data(n=a,ncov=b,theta0=1, g0_dist = g0_dist,variance = variance,
+                             outcome_model = outcome_model,seed = i)
+        ss <- c(ss,sample_splitting(df,k=c,seed=640,  ml_method = ml_method))
+        fs <- c(fs,full_sample(df,seed=640,  ml_method = ml_method))
+        df_to_excel(fs,ss,paste(count))
+      }
+      count = count + 1
+  }
+}
+
+}
+```
+
+

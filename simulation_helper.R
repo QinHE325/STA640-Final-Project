@@ -74,6 +74,7 @@ full_sample <- function(df, ml_method = "xgboost", seed=123){
   
   # lasso
   if(ml_method == "lasso"){
+    lambdas <- 10^seq(2, -3, by = -.1)
     x = model.matrix(Y ~., df)[,-1]
     d = model.matrix(D ~., df)[,-1]
     y = df$Y
