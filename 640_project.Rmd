@@ -12,6 +12,9 @@ require(caret)
 require(ggplot2)
 require(ranger)
 require(patchwork)
+require(e1071)
+require(glmnet)
+require(xgboost)
 set.seed(0224)
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -37,7 +40,8 @@ generate_data <- function(ncov=5,n=1000,theta0=0.5,
                           p = 0.5, mean = 0, variance = 1, 
                           g0_dist = "normal", 
                           outcome_model = "linear",  
-                          params = c(1,0.5)) {
+                          params = c(1,0.5), seed = 640) {
+  set.seed(seed)
   # simulate data
   X = matrix(NA,ncol=ncov,nrow=n)
   for(i in 1:ncov){
@@ -86,34 +90,75 @@ sample_splitting <- function(df,k = 2, ml_method = "random forest", seed=123){
     
     # random forests
     if(ml_method == "random forest"){
-      rf_y <- ranger(Y ~ .-D,data=train)
-      rf_z <- ranger(D ~ .-Y,data=train)
+      fit_y <- ranger(Y ~ .-D,data=train)
+      fit_z <- ranger(D ~ .-Y,data=train)
+       # predict Y and Z
+      py <- predict(fit_y, prediction)
+      pz <- predict(fit_z, prediction)
+      
+      # get residuals
+      u <- prediction$Y - py$predictions
+      v <- prediction$D - pz$predictions
     }
     
     # svm
     if(ml_method == "svm"){
+      fit_y = svm(Y ~ ., data = train, kernel = "linear", cost = 10, scale = FALSE)
+      fit_z = svm(D ~ ., data = train, kernel = "linear", cost = 10, scale = FALSE)
+       # predict Y and Z
+      py <- predict(fit_y, prediction)
+      pz <- predict(fit_z, prediction)
       
+      # get residuals
+      u <- prediction$Y - py
+      v <- prediction$D - pz
     }
     
     # lasso
-    if(ml_method == "svm"){
+    if(ml_method == "lasso"){
+       x = model.matrix(Y ~., train)[,-1]
+       d = model.matrix(D ~., train)[,-1]
+       y = train$Y
+       D = train$D
+       newx_y = model.matrix(Y ~., prediction)[,-1]
+       newx_d = model.matrix(D ~., prediction)[,-1]
+       
+       fit_y = glmnet(x, y, data = train, lambda= 0.5, family='gaussian', intercept = F, alpha=1)
+       fit_z = glmnet(d, D, data = train, lambda= 0.5, family='gaussian', intercept = F, alpha=1)
+        # predict Y and Z
+       py <- predict(fit_y, newx_y)
+       pz <- predict(fit_z, newx_d)
+      
+       # get residuals
+       u <- prediction$Y - py
+       v <- prediction$D - pz
+    }
+    
+    # xgboost
+    if(ml_method == "xgboost"){
+      dtrain = as.matrix(train)
+      
+      fit_y <- xgboost(data = dtrain, label = train$Y, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "reg:squarederror", verbose = FALSE)
+      fit_z <- xgboost(data = dtrain, label = train$D, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "binary:logistic", verbose = FALSE)
+      
+      # predict Y and Z
+      py <- predict(fit_y, as.matrix(prediction))
+      pz <- predict(fit_z, as.matrix(prediction))
+      
+      # get residuals
+      u <- prediction$Y - py
+      v <- prediction$D - pz
+      
       
     }
     
-    # predict Y and Z
-    py <- predict(rf_y, prediction)
-    pz <- predict(rf_z, prediction)
-    
-    # get residuals
-    u <- prediction$Y - py$predictions
-    v <- prediction$D - pz$predictions
     
     # get the estimate of theta
     m1 <- lm(u~v)
     ate <- c(ate,m1$coefficients[2])
   }
-  rf.ite <- mean(ate) # mean ate of 5 folds
-  return(rf.ite) # ite equals ate
+  fit.ite <- mean(ate) # mean ate of 5 folds
+  return(fit.ite) # ite equals ate
 }
 ```
 
@@ -127,16 +172,68 @@ full_sample <- function(df, ml_method = "random forest", seed=123){
   
   # random forests
   if(ml_method == "random forest"){
-      rf_y <- ranger(Y ~ .-D,data=df)
-      rf_z <- ranger(D ~ .-Y,data=df)
+      fit_y <- ranger(Y ~ .-D,data=df)
+      fit_z <- ranger(D ~ .-Y,data=df)
+      # predict Y and Z
+      py <- predict(fit_y, df)
+      pz <- predict(fit_z, df)
+      # get residuals
+      u <- df$Y - py$predictions
+      v <- df$D - pz$predictions
   }
+  
+   # svm
+  if(ml_method == "svm"){
+      fit_y = svm(Y ~ ., data = df, kernel = "linear", cost = 10, scale = FALSE)
+      fit_z = svm(D ~ ., data = df, kernel = "linear", cost = 10, scale = FALSE)
+      # predict Y and Z
+      py <- predict(fit_y, df)
+      pz <- predict(fit_z, df)
+      # get residuals
+      u <- df$Y - py
+      v <- df$D - pz
+  }
+  
+  # lasso
+  if(ml_method == "lasso"){
+       x = model.matrix(Y ~., df)[,-1]
+       d = model.matrix(D ~., df)[,-1]
+       y = df$Y
+       D = df$D
+       newx_y = model.matrix(Y ~., df)[,-1]
+       newx_d = model.matrix(D ~., df)[,-1]
 
-  # predict Y and Z
-  py <- predict(rf_y, df)
-  pz <- predict(rf_z, df)
-  # get residuals
-  u <- df$Y - py$predictions
-  v <- df$D - pz$predictions
+       fit_y = glmnet(x, y, lambda= 0.5, family='gaussian', intercept = F, alpha=1)
+       fit_z = glmnet(d, D, lambda= 0.5, family='gaussian', intercept = F, alpha=1)
+        # predict Y and Z
+       py <- predict(fit_y, newx_y)
+       pz <- predict(fit_z, newx_d)
+      
+       # get residuals
+       u <- df$Y - py
+       v <- df$D - pz
+  }
+  
+  # xgboost
+  if(ml_method == "xgboost"){
+      ddf = as.matrix(df)
+      
+      fit_y <- xgboost(data = ddf, label = df$Y, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "reg:squarederror", verbose = FALSE)
+      fit_z <- xgboost(data = ddf, label = df$D, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "binary:logistic", verbose = FALSE)
+      
+      # predict Y and Z
+      py <- predict(fit_y, ddf)
+      pz <- predict(fit_z, ddf)
+      
+      # get residuals
+      u <- df$Y - py
+      v <- df$D - pz
+      
+      
+  }
+    
+
+
   # get the estimate of theta
   m1 <- lm(u~v)
   return(m1$coefficients[2]) # ite equals ate
@@ -146,11 +243,15 @@ full_sample <- function(df, ml_method = "random forest", seed=123){
 ```{r,warning=F}
 theta0 <- 0.5
 df1 <- generate_data(n=1000,theta0=theta0)
+
 ss <- fs <- c()
 for(i in 1:100){
-  ss <- c(ss,sample_splitting(df1,seed=i))
-  fs <- c(fs,full_sample(df1,seed=i))
+  df1 <- generate_data(n=1000,theta0=theta0, seed = i)
+  ss <- c(ss,sample_splitting(df1,seed=640,  ml_method = "xgboost"))
+  fs <- c(fs,full_sample(df1,seed=640,  ml_method = 'xgboost'))
 }
+
+
 ```
 
 
