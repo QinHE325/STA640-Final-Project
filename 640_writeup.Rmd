@@ -9,8 +9,10 @@ output: word_document
 library(cowplot)
 library(magick)
 library(ggplot2)
+library(flextable)
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(dpi = 300) 
+options(digits = 4)
 ```
 
 ## 1. Introduction
@@ -34,15 +36,16 @@ where $Y$ is the outcome variable, $D$ is the treatment indicator, $X$ is a vect
 
 Next, consider the double machine learning procedure with sample splitting, following Chernozhukov et al. (2018):  
 - Take a $K$-fold random partition $(I_k)^{K}_{k=1}$ of observation indices $[N]=\{1,\cdots,N\}$ such that the size of each fold $I_k$ is $N/K.$ And define $I^c_{k}=\{1,\cdots,N\}$ ``\`` $I_k$ for each $k$. 
-- Using machine learning methods to predict $Y$ and $D$ using X by $\widehat{\mathbb{E}[Y|X])}$ and $\widehat{\mathbb{E}[D|X])}$ respectively.  
+- For $k=1$, using machine learning methods to predict $Y$ and $D$ using $X$ by $\widehat{\mathbb{E}[Y|X])}$ and $\widehat{\mathbb{E}[D|X])}$ respectively on $I_{k=1}$.  
 - Get residuals $\hat{U}=Y-\widehat{\mathbb{E}[Y|X])}$ and $\hat{V}=D-\widehat{\mathbb{E}[D|X])}$  
-- Regress $\hat{U}$ on $\hat{V}$ to get the estimate $\hat{\theta_0}$  
+- Regress $\hat{U}$ on $\hat{V}$ to get the estimate $\widehat{\theta_{0,k=1}}$  
+- Repeat, obtain the $K$ estimators for $k=1,\cdots,K,$ average them, and get $\hat{\theta_0}=\frac{1}{K}\sum^{K}_{k=1}\widehat{\theta_{0,k}}$  
 
-Following the procedures, the estimator $\hat{\theta_0}$ is a consistent estimator and asymptotic normal estimator.
+Following the procedures, the estimator $\hat{\theta_0}$ will be a consistent and asymptotic normal estimator. In other words, the distribution of $\hat{\theta_0}-\theta_0$ will follow a normal distribution and center around zero.
 
 ## 4. Replicate Chernozhukov et al. (2018)
 
-We found the codes for generating the Figure 2 in Chernozhukov et al. (2018) on GitHub. We replicated and rewrote the codes in $R$ and generated a similar plot. 
+We found the codes for generating the Figure 2 in Chernozhukov et al. (2018) on GitHub. The purpose of the figures is to compare full sample with sample splitting and cross fitting procedures. We replicated and rewrote the codes in $R$ and generated a similar plot. 
 
 ```{r,echo=F,warning=F}
 ggdraw() + 
@@ -69,6 +72,22 @@ We fixed the true causal effect $\theta_0$ be 1. And the machine learning method
 ## 6. Real Datasets
 
 We applied the methods described in last section to a real dataset. It is the Right Heart Catheterization (RHC) dataset we used in Homework 3. The data is from Murphy and Cluff (1990), then re-analyzed by Connors et al. (1996) in an influential study. The data contains 5735 samples and 51 covariates. The outcome variable is dth30, which is the vital status at 30 days after admission. And the treatment indicator is TRUE if RHC was applied within 24 hours of admission, and FALSE if RHC was not applied within 24 hours of admission. We are interested in estimating the average treatment effect. 
+
+```{r,echo=FALSE,warning=F,message=F}
+source("real_data.R")
+round_df <- function(x, digits) {
+    numeric_columns <- sapply(x, mode) == 'numeric'
+    x[numeric_columns] <-  round(x[numeric_columns], digits)
+    x
+}
+
+real_res = real_data_res()
+real_res = round_df(real_res, 4)
+```
+```{r,echo=F}
+real_res %>% flextable() %>% autofit() %>% font(fontname = "Cambria",part = "all")
+```
+
 
 ## 7. Conclusions
 

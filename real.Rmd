@@ -12,17 +12,7 @@ source("simulation_helper.R")
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
-```{r}
-df_to_excel = function(fs,ss,name){
-  df = data.frame(
-    full_sample = fs,
-    sample_split = ss
-  )
-  path = paste0("data/",name,".csv")
-  write.csv(df, path, row.names = FALSE)
-}
-```
+`
 
 ## 0 Read data
 
@@ -32,33 +22,24 @@ rhc$treatment = as.numeric(rhc$treatment)
 rhc$dth30 = as.numeric(rhc$dth30)
 rhc <- rhc %>% dplyr::select(-ID)
 rhc <- rhc %>% rename("D"=treatment, "Y"=dth30)
-head(rhc)
 ```
 
-## 1 sample splitting
+
 
 ```{r}
 rss_xgb2 <- sample_splitting(rhc,ml_method="xgboost")
-```
-
-```{r}
 rss_xgb5 <- sample_splitting(rhc,k=5,ml_method="xgboost")
-```
-
-```{r}
 rss_lasso2 <- sample_splitting(rhc,ml_method="lasso")
-```
-
-```{r}
 rss_lasso5 <- sample_splitting(rhc,k=5,ml_method="lasso")
-```
-
-## 2 without sample spitting 
-
-```{r}
 rfs_xgb <- full_sample(rhc,ml_method="xgboost")
-```
-
-```{r}
 rfs_lasso <- full_sample(rhc,ml_method="lasso")
 ```
+
+
+```{r}
+df = data.frame(matrix(c(rss_xgb2,rss_xgb5,rfs_xgb,rss_lasso2,rss_lasso5,rfs_lasso),nrow=2))
+colnames(df) = c("K=2","K=5","full sample")
+df = cbind(method=c("XGBosst","LASSO"),df)
+df
+```
+
