@@ -26,21 +26,64 @@ plot_simdata = function(idx){
   edges = seq(-bound, bound,by = 0.05)
   fs_plot <- hist(fs,breaks = edges,freq = FALSE,main="Full Sample",xlab = "")
   x<-seq(-bound, bound,by=0.05)
-  curve(dnorm(x), add=TRUE,col="red")
+  curve(dnorm(x), add=TRUE,col="red",lwd = 2)
   dev.off()
   
   png(im_path_ss)
   ss_plot <- hist(ss,breaks = edges,freq = FALSE,main="Sample Split",xlab = "")
-  curve(dnorm(x), add=TRUE,col="red")
+  curve(dnorm(x), add=TRUE,col="red", lwd = 2)
   dev.off()
-  
+  return(mean(fs,na.rm = TRUE) - mean(ss,na.rm = TRUE))
   
 }
 
-plot_simdata(13)
-
+diffs = c()
+selected = c()
 for(i in 1:128){
-  plot_simdata(i)
+  curr = plot_simdata(i)
+  diffs = c(diffs,curr)
+  if(abs(curr) > 1){
+    selected = c(selected,i)
+  }
+}
+
+
+
+
+```
+```{r}
+
+png("report_image/hist_diffs.png")
+hist(diffs,breaks = seq(-8, 3,by = 0.05) , main = "Difference between Full Sample and Sample Split")
+dev.off()
+
+
+```
+
+
+
+```{r}
+  
+for(image in selected){
+  data_path = paste0("data/",image,'.csv')
+  im_path = paste0("report_image/",image,".png")
+  sim_data = read.csv(data_path)
+  fs = sim_data$full_sample
+  ss = sim_data$sample_split
+  fs = (fs - 1) / sd(fs,na.rm = TRUE)
+  ss = (ss - 1) / sd(ss,na.rm = TRUE)
+  bound = ceiling(max(abs(range(fs,na.rm=TRUE)[1]), abs(range(fs,na.rm=TRUE)[2]), abs(range(ss,na.rm=TRUE)[1]), abs(range(ss,na.rm=TRUE)[2]))) + 1
+  png(im_path, width = 680, height = 480)
+  par(mfrow=c(1,2))
+  layout(matrix(c(1,2), ncol=2, byrow=TRUE))
+  edges = seq(-bound, bound,by = 0.05)
+  fs_plot <- hist(fs,breaks = edges,freq = FALSE,main="Full Sample",xlab = "")
+  x<-seq(-bound, bound,by=0.05)
+  curve(dnorm(x), add=TRUE,col="red",lwd = 2)
+  
+  ss_plot <- hist(ss,breaks = edges,freq = FALSE,main="Sample Split",xlab = "")
+  curve(dnorm(x), add=TRUE,col="red",lwd = 2)
+  dev.off()
 }
 ```
 
