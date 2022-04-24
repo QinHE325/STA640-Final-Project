@@ -57,19 +57,20 @@ Note that, when we use two-fold sample splitting and cross-fitting and if we par
 
 ## 5. Simulation Study
 
-We explored 20 different scenarios in the data generation process with following configurations.  
-- Number of covariates (5,100)
-- Sample size (50, 1000)
-- True causal effect: 1
-- Number of K-folds (2, 5)
-- Variance of the error term ($U$ and $V$) (0.1,1)
-- Distribution of coefficients for covariates (Normal distribution and Uniform distribution)  
-- Outcome model (linear and non-linear)  
-And the machine learning methods we considered are LASSO and XGBoost (Extreme Gradient Boosting)
+We explored 128 different scenarios in the data generation process with following configurations.  
+- Number of covariates: 5 or 100  
+- Sample size $N$: 50 or 1000  
+- Number of folds $K$: 2, 5  
+- Variance of the error term $U$ and $V$: 0.1 or 1  
+- Distribution of coefficients for covariates $g_0$: $N\sim(1,0.5^2)$ or $U\sim(0.5,1.5)$  
+- Outcome model: linear or non-linear with sine functions
+
+We fixed the true causal effect $\theta_0$ be 1. And the machine learning methods we considered are LASSO and Extreme Gradient Boosting (XGBoost). We fit LASSO using `glmnet` package and the value of $\lambda$ for LASSO is determined by 5-fold cross validation, where we compared $\lambda$ from 0.001 to 100. We fit XGBoost using `xgboost` package. We did not tune XGBoost because we found the loss is small using the parameters provided in the documentation. For each scenario, we generated 100 different data sets and conduct double machine learning using the partial linear models with sample splitting and without sample splitting. The codes for simulations and the simulation results are provided.
 
 ## 6. Real Datasets
 
 We applied the methods described in last section to a real dataset. It is the Right Heart Catheterization (RHC) dataset we used in Homework 3. The data is from Murphy and Cluff (1990), then re-analyzed by Connors et al. (1996) in an influential study. The data contains 5735 samples and 51 covariates. The outcome variable is dth30, which is the vital status at 30 days after admission. And the treatment indicator is TRUE if RHC was applied within 24 hours of admission, and FALSE if RHC was not applied within 24 hours of admission. We are interested in estimating the average treatment effect.
+
 
 ## 7. Conclusions
 
@@ -78,6 +79,7 @@ We applied the methods described in last section to a real dataset. It is the Ri
 - Victor Chernozhukov, Denis Chetverikov, Mert Demirer, Esther Duflo, Christian Hansen, Whitney Newey, James Robins, Double/debiased machine learning for treatment and structural parameters, The Econometrics Journal, Volume 21, Issue 1, 1 February 2018, Pages C1–C68, https://doi.org/10.1111/ectj.12097  
 - Stefan Wager & Susan Athey (2018) Estimation and Inference of Heterogeneous Treatment Effects using Random Forests, Journal of the American Statistical Association, 113:523, 1228-1242, DOI: 10.1080/01621459.2017.1319839  
 - Victor Chernozhukov DML Slides, “Double/Debiased Machine Learning for Causal and Treatment Effects,” May 31, 2018. (Accessed via Sakai)  
+- Seo M, White IR, Furukawa TA, et al. Comparing methods for estimating patient-specific treatment effects in individual patient data meta-analysis. Statistics in Medicine. 2021;40:1553–1573. https://doi.org/10.1002/sim.8859  
 - Codes for figures in Section 4: https://github.com/VC2015/DMLonGitHub/blob/master/Figure2.m  
 - Lecture Notes provided by Professor Fan Li (Assessed via Sakai)  
 - Datasets provided by Professor Fan Li (Assessed via Sakai)
