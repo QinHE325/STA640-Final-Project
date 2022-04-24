@@ -39,6 +39,6 @@ head(rhc)
 ## 1 sample splitting
 
 ```{r}
-sample_splitting(rhc)
+sample_splitting(rhc,ml_method="lasso")
 ```
 

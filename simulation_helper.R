@@ -47,16 +47,20 @@ sample_splitting <- function(df,k = 2, ml_method = "xgboost", seed=123){
     # xgboost
     if(ml_method == "xgboost"){
       
-      dtrain = as.matrix(train)
+      dtrain = model.matrix(~.-D-Y-1,data=train)
+      dpred = model.matrix(~.-D-Y-1,data=prediction)
       
-      fit_y <- xgboost(data = as.matrix(train%>%dplyr::select(-D)), 
+      fit_y <- xgboost(data = dtrain, 
                        label = train$Y, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "reg:squarederror", verbose = FALSE)
-      fit_z <- xgboost(data = as.matrix(train%>%dplyr::select(-Y)),
+      fit_z <- xgboost(data = dtrain,
                        label = train$D, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "binary:logistic", verbose = FALSE)
       
+      dpredy = model.matrix(Y~.-D-1,data=prediction)
+      dpredz = model.matrix(D~.-Y-1,data=prediction)
+      
       # predict Y and Z
-      py <- predict(fit_y, as.matrix(prediction%>%dplyr::select(-D)))
-      pz <- predict(fit_z, as.matrix(prediction%>%dplyr::select(-Y)))
+      py <- predict(fit_y, dpred)
+      pz <- predict(fit_z, dpred)
       
       # get residuals
       u <- prediction$Y - py
@@ -101,16 +105,15 @@ full_sample <- function(df, ml_method = "xgboost", seed=123){
   
   # xgboost
   if(ml_method == "xgboost"){
-    ddf = as.matrix(df)
-    
-    fit_y <- xgboost(data = as.matrix(df%>%dplyr::select(-D)), 
+    ddf = model.matrix(~.-D-Y-1,data=train)
+    fit_y <- xgboost(data = ddf, 
                      label = df$Y, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "reg:squarederror", verbose = FALSE)
-    fit_z <- xgboost(data = as.matrix(df%>%dplyr::select(-Y)), 
+    fit_z <- xgboost(data = ddf, 
                      label = df$D, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "binary:logistic", verbose = FALSE)
     
     # predict Y and Z
-    py <- predict(fit_y, as.matrix(df%>%dplyr::select(-D)))
-    pz <- predict(fit_z, as.matrix(df%>%dplyr::select(-Y)))
+    py <- predict(fit_y, ddf)
+    pz <- predict(fit_z, ddf)
     
     # get residuals
     u <- df$Y - py
