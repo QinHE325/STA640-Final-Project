@@ -84,8 +84,24 @@ The above two plots are scenario 1 and 2, where the machine learning method is X
 ![Scenario87](report_image/87.png){width=250px}![Scenario71](report_image/71.png){width=250px}
 This plots correspond to a scenario where the machine learning method is LASSO, number of covariates is 100, sample size is 1000, the outcome model is generated from linear function, and the sample splitting strategy is 2-fold. The only difference is that the plot at left corresponds to data generated with coefficients for covariates following uniform distribution, and the right plot corresponds to data generated with coefficients for covariates following normal distribution. We can observe that under circumstances when both sample size and number of covariates are large, sample splitting can effectively reduce bias that would have been created if full sample are used instead. 
 
+```{r,echo=F,warning=F,message=F}
+source("table_helper.R")
+idx1 = c(1,2,65,66)
+table1 = make_table(idx)
+table1 %>% flextable() %>% autofit() %>% font(fontname = "Cambria",part = "all") %>%
+  set_caption("Table1",style = "Table Caption")
+```
 
+For the Table 1, the number of covariates is 5, the sample size is 50, the variance for the error term is 0.01, coefficients for covariates follow normal distribution, and the outcome model is generated from linear functions. 
 
+```{r,echo=F,warning=F,message=F}
+idx2 = c(3,4,67,68)
+table2 = make_table(idx2)
+table2 %>% flextable() %>% autofit() %>% font(fontname = "Cambria",part = "all") %>%
+  set_caption("Table2",style = "Table Caption")
+```
+
+For the Table 2, the number of covariates is 100, the sample size is 50, the variance for the error term is 0.01, coefficients for covariates follow normal distribution, and the outcome model is generated from linear functions. This is the case where the number of covariates is relatively higher than the sample size.
 
 ## 7. Real Datasets
 
