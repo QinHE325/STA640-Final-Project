@@ -48,8 +48,8 @@ for(a in n){
       for(i in 1:100){
         df <- generate_data(n=a,ncov=b,theta0=1, g0_dist = g0_dist,variance = variance,
                              outcome_model = outcome_model,seed = i)
-        ss <- c(ss1,sample_splitting(df,k=c,seed=640,  ml_method = ml_method))
-        fs <- c(fs1,full_sample(df,seed=640,  ml_method = ml_method))
+        ss <- c(ss,sample_splitting(df,k=c,seed=640,  ml_method = ml_method))
+        fs <- c(fs,full_sample(df,seed=640,  ml_method = ml_method))
         df_to_excel(fs,ss,paste(count))
       }
       count = count + 1
