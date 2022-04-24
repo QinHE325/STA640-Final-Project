@@ -53,7 +53,6 @@ dev.off()
 png("Fig2_split.png")
 hist(b2,breaks = edges,freq = FALSE,main = "Sample Splitting",xlab = "Bias")
 curve(dnorm(x), add=TRUE,col="red")
-# Close the graphics device
 dev.off() 
 ```
 
