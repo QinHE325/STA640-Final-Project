@@ -17,7 +17,7 @@ options(digits = 4)
 
 ## 1. Introduction
 
-Sample splitting is one of the key issues when adapting machine learning methods to causal inference problems. However, there are some anecdotes saying that sample splitting will not help in finite samples. Therefore, this paper study will first go through Chernozhukov et al. (2018) especially about an example that sample splitting reduces the bias, and then will conduct a few simulation studies to figure out the effect of sample splitting when estimating causal effects.
+Athey and Imbens (2016) proposed an “honest” approach to estimate causal effects using classification and regression trees (CART) that separate samples used for constructing the partition and estimating effects within leaves of the partition. Their study shows that honest estimation can remove the bias and improve in the coverage of confidence intervals. The intuition behind the honest criterion is to avoid using same data or information twice for different tasks, more specifically, to select a model structure and to make estimation given a mode structure (Athey and Imbens 2016). Sample splitting follows the honesty criterion and is indeed one of the key issues when adapting machine learning methods to causal inference problems. However, some anecdotes saying that sample splitting will not help in finite samples. Therefore, this paper study will first go through Chernozhukov et al. (2018) especially about an example that sample splitting reduces the bias, and then will conduct a few simulation studies to figure out the effect of sample splitting when estimating causal effects. 
 
 ## 2. Double Machine Learning and Sample Splitting
 
@@ -25,7 +25,7 @@ Chernozhukov et al. (2018) establish that in very high dimension cases, machine 
 
 Wager and Athey (2018) illustrated double-sample trees as a motivation to reduce bias. They divided training subsamples into two halves and used one half for split selection and the other for within-leaf estimation. Though sampling splitting is sometimes criticized as inefficient as they do not use the full training data at each estimation steps; however, they argued that by aggregating over multiple trees, each sample will be used for split selection or leaf estimation. By doing so, therefore, we can efficiently achieve honesty criterion without wasting half of the samples.  
 
-Wager and Athey’s ideas are similar to sample splitting and cross fitting in double machine learning. To perform the sample splitting to control for bias, we need to first split data into main sample and auxiliary sample, and then use the main sample to train the auxiliary sample to estimate. Next, we swap the role of main sample and auxiliary sample to estimate. Finally, we combine the results by averaging over the two estimators. By doing so, we can achieve a good estimator without losing efficiency. The idea of sample splitting is an analogy to $K$-fold cross validation and can be also generalized to $K$-fold splitting and cross-fitting. For $K$-fold cases, we take a $K$-fold random partition of data rather than splitting into half, and at the end we aggregate over $K$ machine learning estimators so that we use the full data. In terms of the choice of $K$, Chernozhukov et al. (2018) recommends using moderate $K$ values such as 4 or 5.
+Wager and Athey’s ideas are similar to sample splitting and cross fitting in double machine learning. To perform the sample splitting to control for bias, we need to first split data into main sample and auxiliary sample, and then use the main sample to train and the auxiliary sample to estimate. Next, we swap the role of main sample and auxiliary sample to re-estimate. Finally, we combine the results by averaging over the two estimators. By doing so, we can achieve a good estimator without losing efficiency. The idea of sample splitting is an analogy to $K$-fold cross validation and can be also generalized to $K$-fold splitting and cross-fitting. For $K$-fold cases, we take a $K$-fold random partition of data rather than splitting into half, and at the end we aggregate over $K$ machine learning estimators so that we use the full data. In terms of the choice of $K$, Chernozhukov et al. (2018) recommends using moderate $K$ values such as 4 or 5.
 
 ## 3. Set up of Double Machine Learning with Partial Linear Model
 
@@ -35,10 +35,11 @@ $$D=m_0(X)+V,\qquad E[V|X]=0,$$
 where $Y$ is the outcome variable, $D$ is the treatment indicator, $X$ is a vector of confounders, $U$ and $V$ are disturbances, and $\theta_0$ is the causal estimand we would like to infer.  
 
 Next, consider the double machine learning procedure with sample splitting, following Chernozhukov et al. (2018):  
-- Take a $K$-fold random partition $(I_k)^{K}_{k=1}$ of observation indices $[N]=\{1,\cdots,N\}$ such that the size of each fold $I_k$ is $N/K.$ And define $I^c_{k}=\{1,\cdots,N\}$ ``\`` $I_k$ for each $k$. 
-- For $k=1$, using machine learning methods to predict $Y$ and $D$ using $X$ by $\widehat{\mathbb{E}[Y|X])}$ and $\widehat{\mathbb{E}[D|X])}$ respectively on $I_{k=1}$.  
+- Take a $K$-fold random partition $(I_k)^{K}_{k=1}$ of observation indices $[N]=\{1,\cdots,N\}$ such that the size of each fold $I_k$ is $N/K.$ And define $I^c_{k}=\{1,\cdots,N\}$ ``\`` $I_k$ for each $k$.  
+- For $k=1$, using machine learning methods to estimate $\hat{g_0}$ and $\hat{m_0}$ using samples $I^c_{k=1}.$  
+- Predict $Y$ and $D$ using $X$ by $\widehat{\mathbb{E}[Y|X])}$ and $\widehat{\mathbb{E}[D|X])}$ respectively on $I_{k=1}$.  
 - Get residuals $\hat{U}=Y-\widehat{\mathbb{E}[Y|X])}$ and $\hat{V}=D-\widehat{\mathbb{E}[D|X])}$  
-- Regress $\hat{U}$ on $\hat{V}$ to get the estimate $\widehat{\theta_{0,k=1}}$  
+- Regress $\hat{U}$ on $\hat{V}$ to get the estimate $\widehat{\theta_{0,k=1}}$ using samples $I_{k=1}.$  
 - Repeat, obtain the $K$ estimators for $k=1,\cdots,K,$ average them, and get $\hat{\theta_0}=\frac{1}{K}\sum^{K}_{k=1}\widehat{\theta_{0,k}}$  
 
 Following the procedures, the estimator $\hat{\theta_0}$ will be a consistent and asymptotic normal estimator. In other words, the distribution of $\hat{\theta_0}-\theta_0$ will follow a normal distribution and center around zero.
@@ -69,6 +70,9 @@ We explored 128 different scenarios in the data generation process with followin
 
 We fixed the true causal effect $\theta_0$ be 1. And the machine learning methods we considered are LASSO and Extreme Gradient Boosting (XGBoost). We fit LASSO using `glmnet` package and the value of $\lambda$ for LASSO is determined by 5-fold cross validation, where we compared $\lambda$ from 0.001 to 100. We fit XGBoost using `xgboost` package. We did not tune XGBoost because we found the loss is small using the parameters provided in the documentation. For each scenario, we generated 100 different data sets and conduct double machine learning using the partial linear models with sample splitting and without sample splitting. The codes for simulations and the simulation results are provided.
 
+<!-- We pick a few plots  -->
+
+
 ## 6. Real Datasets
 
 We applied the methods described in last section to a real dataset. It is the Right Heart Catheterization (RHC) dataset we used in Homework 3. The data is from Murphy and Cluff (1990), then re-analyzed by Connors et al. (1996) in an influential study. The data contains 5735 samples and 51 covariates. The outcome variable is dth30, which is the vital status at 30 days after admission. And the treatment indicator is TRUE if RHC was applied within 24 hours of admission, and FALSE if RHC was not applied within 24 hours of admission. We are interested in estimating the average treatment effect. 
@@ -93,11 +97,12 @@ real_res %>% flextable() %>% autofit() %>% font(fontname = "Cambria",part = "all
 
 ## References
 
-- Victor Chernozhukov, Denis Chetverikov, Mert Demirer, Esther Duflo, Christian Hansen, Whitney Newey, James Robins, Double/debiased machine learning for treatment and structural parameters, The Econometrics Journal, Volume 21, Issue 1, 1 February 2018, Pages C1–C68, https://doi.org/10.1111/ectj.12097  
-- Stefan Wager & Susan Athey (2018) Estimation and Inference of Heterogeneous Treatment Effects using Random Forests, Journal of the American Statistical Association, 113:523, 1228-1242, DOI: 10.1080/01621459.2017.1319839  
-- Victor Chernozhukov DML Slides, “Double/Debiased Machine Learning for Causal and Treatment Effects,” May 31, 2018. (Accessed via Sakai)  
-- Seo M, White IR, Furukawa TA, et al. Comparing methods for estimating patient-specific treatment effects in individual patient data meta-analysis. Statistics in Medicine. 2021;40:1553–1573. https://doi.org/10.1002/sim.8859  
-- Codes for figures in Section 4: https://github.com/VC2015/DMLonGitHub/blob/master/Figure2.m  
-- Lecture Notes provided by Professor Fan Li (Assessed via Sakai)  
+- Athey, Susan, and Guido Imbens. “Recursive Partitioning for Heterogeneous Causal Effects.” Proceedings of the National Academy of Sciences, vol. 113, no. 27, 2016, pp. 7353–7360., https://doi.org/10.1073/pnas.1510489113. 
+- Chernozhukov, Victor, et al. “Double/Debiased Machine Learning for Treatment and Structural Parameters.” The Econometrics Journal, vol. 21, no. 1, 2018, https://doi.org/10.1111/ectj.12097. 
+- Wager, Stefan, and Susan Athey. “Estimation and Inference of Heterogeneous Treatment Effects Using Random Forests.” Journal of the American Statistical Association, vol. 113, no. 523, 2018, pp. 1228–1242., https://doi.org/10.1080/01621459.2017.1319839. 
+- Seo, Michael, et al. “Comparing Methods for Estimating Patient‐Specific Treatment Effects in Individual Patient Data Meta‐Analysis.” Statistics in Medicine, vol. 40, no. 6, 2020, pp. 1553–1573., https://doi.org/10.1002/sim.8859. 
+- Codes for figures in Section 4: https://github.com/VC2015/DMLonGitHub/blob/master/Figure2.m 
+- Lecture Notes provided by Professor Fan Li (Assessed via Sakai) 
+- Chernozhukov, Victor DML Slides, “Double/Debiased Machine Learning for Causal and Treatment Effects,” May 31, 2018. (Accessed via Sakai) 
 - Datasets provided by Professor Fan Li (Assessed via Sakai)
 
