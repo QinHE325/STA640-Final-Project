@@ -20,7 +20,7 @@ df_to_excel = function(fs,ss,name){
     sample_split = ss
   )
   path = paste0("data/",name,".csv")
-  write_xlsx(df, path)
+  write.csv(df, path, row.names = FALSE)
 }
 ```
 
@@ -35,10 +35,30 @@ rhc <- rhc %>% rename("D"=treatment, "Y"=dth30)
 head(rhc)
 ```
 
-
 ## 1 sample splitting
 
 ```{r}
-sample_splitting(rhc,ml_method="xgboost")
+rss_xgb2 <- sample_splitting(rhc,ml_method="xgboost")
 ```
 
+```{r}
+rss_xgb5 <- sample_splitting(rhc,k=5,ml_method="xgboost")
+```
+
+```{r}
+rss_lasso2 <- sample_splitting(rhc,ml_method="lasso")
+```
+
+```{r}
+rss_lasso5 <- sample_splitting(rhc,k=5,ml_method="lasso")
+```
+
+## 2 without sample spitting 
+
+```{r}
+rfs_xgb <- full_sample(rhc,ml_method="xgboost")
+```
+
+```{r}
+rfs_lasso <- full_sample(rhc,ml_method="lasso")
+```
