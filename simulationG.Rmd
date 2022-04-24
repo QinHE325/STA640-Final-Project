@@ -40,7 +40,7 @@ g0_dist = "normal"
 
 
 ```{r}
-count = 33 
+count = 97 
 for(a in n){
   for(b in ncov){
     for(c in k){
