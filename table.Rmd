@@ -25,8 +25,26 @@ K=2,5,full, xgboost, lasso
 
 Table 1: normal, linear, var=0.1, n=50, ncov=5
 
+k = 2, xgboost,  normal, linear, var=0.1, n=50, ncov=5 idx = 1
+k = 5, xgboost,  normal, linear, var=0.1, n=50, ncov=5 idx = 2
+k = 2, lasso,  normal, linear, var=0.1, n=50, ncov=5 idx = 65
+k = 5, lasso,  normal, linear, var=0.1, n=50, ncov=5 idx = 66
 
 
+Table 1: normal, linear, var=0.1, n=50, ncov=5
 
+```{r}
+idx = c(1,2,65,66)
+stats = c()
+for(i in idx){
+  stats = c(stats,stats_simdata(i))
+}
+stats
+```
+Table 2: normal, linear, var=0.1, n=50, ncov=100
 
+k = 2, xgboost,  normal, linear, var=0.1, n=50, ncov=100 idx = 3
+k = 5, xgboost,  normal, linear, var=0.1, n=50, ncov=100 idx = 4
+k = 2, lasso,  normal, linear, var=0.1, n=50, ncov=100 idx = 67
+k = 5, lasso,  normal, linear, var=0.1, n=50, ncov=100 idx = 68
 
