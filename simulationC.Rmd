@@ -20,10 +20,9 @@ df_to_excel = function(fs,ss,name){
     sample_split = ss
   )
   path = paste0("data/",name,".csv")
-  write_xlsx(df, path)
+  write.csv(df, path, row.names = FALSE)
+  
 }
-
-
 ```
 
 

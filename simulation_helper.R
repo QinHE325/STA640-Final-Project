@@ -55,8 +55,6 @@ sample_splitting <- function(df,k = 2, ml_method = "xgboost", seed=123){
       fit_z <- xgboost(data = dtrain,
                        label = train$D, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "binary:logistic", verbose = FALSE)
       
-      dpredy = model.matrix(Y~.-D-1,data=prediction)
-      dpredz = model.matrix(D~.-Y-1,data=prediction)
       
       # predict Y and Z
       py <- predict(fit_y, dpred)
