@@ -49,14 +49,14 @@ sample_splitting <- function(df,k = 2, ml_method = "xgboost", seed=123){
       
       dtrain = as.matrix(train)
       
-      fit_y <- xgboost(data = dtrain%>%dplyr::select(-D), 
+      fit_y <- xgboost(data = as.matrix(train%>%dplyr::select(-D)), 
                        label = train$Y, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "reg:squarederror", verbose = FALSE)
-      fit_z <- xgboost(data = dtrain%>%dplyr::select(-Y),
+      fit_z <- xgboost(data = as.matrix(train%>%dplyr::select(-Y)),
                        label = train$D, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "binary:logistic", verbose = FALSE)
       
       # predict Y and Z
-      py <- predict(fit_y, as.matrix(prediction)%>%dplyr::select(-D))
-      pz <- predict(fit_z, as.matrix(prediction)%>%dplyr::select(-Y))
+      py <- predict(fit_y, as.matrix(prediction%>%dplyr::select(-D)))
+      pz <- predict(fit_z, as.matrix(prediction%>%dplyr::select(-Y)))
       
       # get residuals
       u <- prediction$Y - py
@@ -103,14 +103,14 @@ full_sample <- function(df, ml_method = "xgboost", seed=123){
   if(ml_method == "xgboost"){
     ddf = as.matrix(df)
     
-    fit_y <- xgboost(data = ddf%>%dplyr::select(-D), 
+    fit_y <- xgboost(data = as.matrix(df%>%dplyr::select(-D)), 
                      label = df$Y, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "reg:squarederror", verbose = FALSE)
-    fit_z <- xgboost(data = ddf%>%dplyr::select(-Y), 
+    fit_z <- xgboost(data = as.matrix(df%>%dplyr::select(-Y)), 
                      label = df$D, max.depth = 2, eta = 1, nthread = 2, nrounds = 2, objective = "binary:logistic", verbose = FALSE)
     
     # predict Y and Z
-    py <- predict(fit_y, ddf%>%dplyr::select(-D))
-    pz <- predict(fit_z, ddf%>%dplyr::select(-Y))
+    py <- predict(fit_y, as.matrix(df%>%dplyr::select(-D)))
+    pz <- predict(fit_z, as.matrix(df%>%dplyr::select(-Y)))
     
     # get residuals
     u <- df$Y - py
