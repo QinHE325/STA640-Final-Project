@@ -135,27 +135,7 @@ table4 %>% flextable() %>% font(fontname = "Cambria",part = "all") %>%
 ```
 
 
-## 7. Real Datasets
-
-We applied the methods described in last section to a real dataset. It is the Right Heart Catheterization (RHC) dataset we used in Homework 3. The data is from Murphy and Cluff (1990), then re-analyzed by Connors et al. (1996) in an influential study. The data contains 5735 samples and 51 covariates. The outcome variable is dth30, which is the vital status at 30 days after admission. And the treatment indicator is TRUE if RHC was applied within 24 hours of admission, and FALSE if RHC was not applied within 24 hours of admission. We are interested in estimating the average treatment effect. 
-
-```{r,echo=FALSE,warning=F,message=F,eval=F}
-source("real_data.R")
-round_df <- function(x, digits) {
-    numeric_columns <- sapply(x, mode) == 'numeric'
-    x[numeric_columns] <-  round(x[numeric_columns], digits)
-    x
-}
-
-real_res = real_data_res()
-real_res = round_df(real_res, 4)
-```
-```{r,echo=F,eval=F}
-real_res %>% flextable() %>% autofit() %>% font(fontname = "Cambria",part = "all")
-```
-
-
-## 8. Conclusions
+## 7. Conclusions
 
 ## References
 
@@ -166,5 +146,4 @@ real_res %>% flextable() %>% autofit() %>% font(fontname = "Cambria",part = "all
 - Codes for figures in Section 4: https://github.com/VC2015/DMLonGitHub/blob/master/Figure2.m 
 - Lecture Notes provided by Professor Fan Li (Assessed via Sakai) 
 - Chernozhukov, Victor DML Slides, “Double/Debiased Machine Learning for Causal and Treatment Effects,” May 31, 2018. (Accessed via Sakai) 
-- Datasets provided by Professor Fan Li (Assessed via Sakai)
 
