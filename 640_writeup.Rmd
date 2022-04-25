@@ -81,9 +81,11 @@ We may observe that most of the differences are around zero, suggesting that the
 ![Scenario1](report_image/1.png){width=250px} ![Scenario2](report_image/2.png){width=250px}
 
 The above two plots are scenario 1 and 2, where the machine learning method is XGBoost, number of covariates is 5, sample size is 50, coefficients for covariates follow normal distribution, and the outcome model is generated from linear functions. The left plot is 2-fold sample splitting and the right plot is 5-fold. Under these two scenarios, we can see that using the full sample may cause large bias, and sample splitting can reduce the bias. We have calculated the difference between averaged bias of full sample and sample splitting across all 128 scenarios. In fact, under 66 out 128 scenarios, sample splitting method obtains lower average bias than full sample approach. This does not support that sample splitting approach is superior to full sample as it only out-perform full sample in around half of the scenarios. However, we think it is more meaningful to focus on extreme cases when full sample results bias significantly larger than that from sample splitting.
+
 ![Scenario87](report_image/87.png){width=250px}![Scenario71](report_image/71.png){width=250px}
 This plots correspond to a scenario where the machine learning method is LASSO, number of covariates is 100, sample size is 1000, the outcome model is generated from linear function, and the sample splitting strategy is 2-fold. The only difference is that the plot at left corresponds to data generated with coefficients for covariates following uniform distribution, and the right plot corresponds to data generated with coefficients for covariates following normal distribution. We can observe that under circumstances when both sample size and number of covariates are large, sample splitting can effectively reduce bias that would have been created if full sample are used instead. 
 
+In addition to plots, we have calculated some summary statistics including bias and variances for full sample, 2-fold sample splitting and 5-fold sample splitting. 
 ```{r,echo=F,warning=F,message=F}
 source("table_helper.R")
 idx1 = c(1,2,65,66)
@@ -102,6 +104,8 @@ table2 %>% flextable() %>% autofit() %>% font(fontname = "Cambria",part = "all")
 ```
 
 For the Table 2, the number of covariates is 100, the sample size is 50, the variance for the error term is 0.01, coefficients for covariates follow normal distribution, and the outcome model is generated from linear functions. This is the case where the number of covariates is relatively higher than the sample size.
+
+From the two tables above, we can see that under both scenario, 2-fold sample splitting is better than full sample, but 5-fold sample splitting does not necessarily reduce bias from full sample. 
 
 ## 7. Real Datasets
 
