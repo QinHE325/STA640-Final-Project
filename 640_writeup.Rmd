@@ -91,7 +91,7 @@ source("table_helper.R")
 idx1 = c(1,2,65,66)
 table1 = make_table(idx1)
 table1 %>% flextable() %>% autofit() %>% font(fontname = "Cambria",part = "all") %>%
-  set_caption("Table1",style = "Table Caption")
+  set_caption(style = "Table Caption")
 ```
 
 For the Table 1, the number of covariates is 5, the sample size is 50, the variance for the error term is 0.01, coefficients for covariates follow normal distribution, and the outcome model is generated from linear functions. 
@@ -100,7 +100,7 @@ For the Table 1, the number of covariates is 5, the sample size is 50, the varia
 idx2 = c(3,4,67,68)
 table2 = make_table(idx2)
 table2 %>% flextable() %>% autofit() %>% font(fontname = "Cambria",part = "all") %>%
-  set_caption("Table2",style = "Table Caption")
+  set_caption(style = "Table Caption")
 ```
 
 For the Table 2, the number of covariates is 100, the sample size is 50, the variance for the error term is 0.01, coefficients for covariates follow normal distribution, and the outcome model is generated from linear functions. This is the case where the number of covariates is relatively higher than the sample size.
@@ -117,7 +117,7 @@ table3 %>% flextable() %>% font(fontname = "Cambria",part = "all") %>%
   set_header_labels(method="Method",fll="Full",ll="Twofold",flh="Full",lh="Twofold") %>%
   add_header_row(top = TRUE, values = c("","N=50, Ncov=5", "N=50, Ncov=100"), 
                  colwidths = c(1,2,2)) %>% autofit() %>%
-  set_caption("Table3",style = "Table Caption") 
+  set_caption(style = "Table Caption") 
 ```
 
 ```{r,echo=F,warning=F,message=F}
@@ -127,7 +127,7 @@ table4 %>% flextable() %>% font(fontname = "Cambria",part = "all") %>%
   set_header_labels(method="Method",fll="Full",ll="Twofold",flh="Full",lh="Twofold") %>%
   add_header_row(top = TRUE, values = c("","N=1000, Ncov=5","N=1000, Ncov=100"), 
                  colwidths = c(1,2,2)) %>% autofit() %>%
-  set_caption("Table4",style = "Table Caption") 
+  set_caption(style = "Table Caption") 
 ```
 
 
