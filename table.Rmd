@@ -50,48 +50,49 @@ make_table2 <- function(idx){
   r1 = c(stats_simdata(idx[1])[1],stats_simdata(idx[1])[3],
          stats_simdata(idx[1])[2],stats_simdata(idx[1])[4],
          stats_simdata(idx[2])[1],stats_simdata(idx[2])[3],
-         stats_simdata(idx[2])[2],stats_simdata(idx[2])[4],
-         stats_simdata(idx[3])[1],stats_simdata(idx[3])[3],
+         stats_simdata(idx[2])[2],stats_simdata(idx[2])[4])
+  r2 = c(stats_simdata(idx[3])[1],stats_simdata(idx[3])[3],
          stats_simdata(idx[3])[2],stats_simdata(idx[3])[4],
          stats_simdata(idx[4])[1],stats_simdata(idx[4])[3],
          stats_simdata(idx[4])[2],stats_simdata(idx[4])[4])
-  r2 = c(stats_simdata(idx[5])[1],stats_simdata(idx[5])[3],
-         stats_simdata(idx[5])[2],stats_simdata(idx[5])[4],
-         stats_simdata(idx[6])[1],stats_simdata(idx[6])[3],
-         stats_simdata(idx[6])[2],stats_simdata(idx[6])[4],
-         stats_simdata(idx[7])[1],stats_simdata(idx[7])[3],
-         stats_simdata(idx[7])[2],stats_simdata(idx[7])[4],
-         stats_simdata(idx[8])[1],stats_simdata(idx[8])[3],
-         stats_simdata(idx[8])[2],stats_simdata(idx[8])[4])
   df = rbind("XGBoost"=r1,"LASSO"=r2) %>% as.data.frame()
   colnames(df) <- c("fllm","fllse","llm","llse",
-                    "flhm","flhse","lhm","lhse",
-                    "fhlm","fhlse","hlm","hlse",
-                    "fhhm","fhhse","hhm","hhse")
+                    "flhm","flhse","lhm","lhse")
   df = round_df(df,3)
   df <- df %>%
     mutate(fll=paste0(fllm,"(",fllse,")")) %>%
     mutate(flh=paste0(flhm,"(",flhse,")")) %>%
-    mutate(fhl=paste0(fhlm,"(",fhlse,")")) %>%
-    mutate(fhh=paste0(fhhm,"(",fhhse,")")) %>%
     mutate(ll=paste0(llm,"(",llse,")")) %>%
     mutate(lh=paste0(lhm,"(",lhse,")")) %>%
-    mutate(hl=paste0(hlm,"(",hlse,")")) %>%
-    mutate(hh=paste0(hhm,"(",hhse,")")) %>%
-    dplyr::select(fll,ll,flh,lh,fhl,hl,fhh,hh) %>%
+    dplyr::select(fll,ll,flh,lh) %>%
     rownames_to_column(" ")
   return(df)
 }
 ```
 
+
 ```{r}
+idx3 <- c(1,3,65,67)
 table3 = make_table2(idx3)
 table3 %>% flextable() %>% font(fontname = "Cambria",part = "all") %>%
-  set_header_labels(method="Method",fll="Full",ll="Twofold",flh="Full",lh="Twofold",fhl="Full",hl="Twofold",fhh="Full",hh="Twofold") %>%
-  add_header_row(top = TRUE, values = c("","N=50, Ncov=5", "N=50, Ncov=100", "N=1000, Ncov=5","N=1000, Ncov=100"), 
-                 colwidths = c(1,2,2,2,2)) %>% autofit() %>%
+  set_header_labels(method="Method",fll="Full",ll="Twofold",flh="Full",lh="Twofold") %>%
+  add_header_row(top = TRUE, values = c("","N=50, Ncov=5", "N=50, Ncov=100"), 
+                 colwidths = c(1,2,2)) %>% autofit() %>%
   set_caption("Table3",style = "Table Caption") 
 ```
 
+```{r}
+idx4 <- c(5,7,69,71)
+table4 = make_table2(idx4)
+table4 %>% flextable() %>% font(fontname = "Cambria",part = "all") %>%
+  set_header_labels(method="Method",fll="Full",ll="Twofold",flh="Full",lh="Twofold") %>%
+  add_header_row(top = TRUE, values = c("","N=1000, Ncov=5","N=1000, Ncov=100"), 
+                 colwidths = c(1,2,2)) %>% autofit() %>%
+  set_caption("Table4",style = "Table Caption") 
+```
 
-50 5   50 100   1000 5   1000 100 
+
+
+
+
+
