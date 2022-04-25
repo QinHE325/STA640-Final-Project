@@ -40,7 +40,7 @@ We explored 128 different scenarios in the data generation process with followin
 - Outcome model: linear or non-linear with sine functions
 
 ```{r}
-idx3 = c(1,3,5,7,65,67,69,71)
+idx = c(1,3,5,7,65,67,69,71)
 ```
 
 
@@ -64,20 +64,33 @@ make_table2 <- function(idx){
          stats_simdata(idx[8])[1],stats_simdata(idx[8])[3],
          stats_simdata(idx[8])[2],stats_simdata(idx[8])[4])
   df = rbind("XGBoost"=r1,"LASSO"=r2) %>% as.data.frame()
-  # colnames(df) <- c("f1m","f1se","tm","tse","fm","fse")
+  colnames(df) <- c("fllm","fllse","llm","llse",
+                    "flhm","flhse","lhm","lhse",
+                    "fhlm","fhlse","hlm","hlse",
+                    "fhhm","fhhse","hhm","hhse")
   df = round_df(df,3)
-  # df <- df %>% 
-  #   mutate("Full"=paste0(f1m,"(",f1se,")")) %>% 
-  #   mutate("Twofold"=paste0(tm,"(",tse,")")) %>%
-  #   mutate("Fivefold"=paste0(fm,"(",fse,")")) %>%
-  #   dplyr::select("Full","Twofold","Fivefold") %>% 
-  #   rownames_to_column("Method")
+  df <- df %>%
+    mutate(fll=paste0(fllm,"(",fllse,")")) %>%
+    mutate(flh=paste0(flhm,"(",flhse,")")) %>%
+    mutate(fhl=paste0(fhlm,"(",fhlse,")")) %>%
+    mutate(fhh=paste0(fhhm,"(",fhhse,")")) %>%
+    mutate(ll=paste0(llm,"(",llse,")")) %>%
+    mutate(lh=paste0(lhm,"(",lhse,")")) %>%
+    mutate(hl=paste0(hlm,"(",hlse,")")) %>%
+    mutate(hh=paste0(hhm,"(",hhse,")")) %>%
+    dplyr::select(fll,ll,flh,lh,fhl,hl,fhh,hh) %>%
+    rownames_to_column(" ")
   return(df)
 }
 ```
 
 ```{r}
-make_table2(idx3)
+table3 = make_table2(idx3)
+table3 %>% flextable() %>% font(fontname = "Cambria",part = "all") %>%
+  set_header_labels(method="Method",fll="Full",ll="Twofold",flh="Full",lh="Twofold",fhl="Full",hl="Twofold",fhh="Full",hh="Twofold") %>%
+  add_header_row(top = TRUE, values = c("","N=50, Ncov=5", "N=50, Ncov=100", "N=1000, Ncov=5","N=1000, Ncov=100"), 
+                 colwidths = c(1,2,2,2,2)) %>% autofit() %>%
+  set_caption("Table3",style = "Table Caption") 
 ```
 
 
