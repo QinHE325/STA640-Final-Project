@@ -9,7 +9,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
+source: https://github.com/VC2015/DMLonGitHub/blob/master/Figure2.m
 
 ```{r}
 set.seed(640)
